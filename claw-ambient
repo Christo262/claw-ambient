@@ -207,33 +207,49 @@ def main():
             break
         time.sleep(1)
 
+    # Ask the compositor to send only as many frames as we sample, instead of copying every
+    # frame at display refresh rate and dropping most of them.
+    cap = f" ! video/x-raw,max-framerate={fps}/1"
     if node is not None:
         print(f"Using gamescope capture (node {node})", flush=True)
         src = f"pipewiresrc path={node} do-timestamp=true"
         portal = None
+        can_uncap = True                    # untested cap: fall back to uncapped if it fails
     else:
         print("Using desktop screen-share portal", flush=True)
         portal = Portal()                   # keep reference: session lives with the D-Bus connection
         fd, node = portal.open()
-        # Ask the compositor to send only as many frames as we sample, instead of copying
-        # every frame at display refresh rate and dropping most of them.
-        src = (f"pipewiresrc fd={fd} path={node} do-timestamp=true ! "
-               f"video/x-raw,max-framerate={fps}/1")
+        src = f"pipewiresrc fd={fd} path={node} do-timestamp=true"
+        can_uncap = False                   # the portal fd can't be reused for a second pipeline
 
     W, H = 96, 54
-    pipeline = Gst.parse_launch(
-        f"{src} ! videorate drop-only=true max-rate={fps} ! videoscale ! "
-        f"video/x-raw,width={W},height={H} ! videoconvert ! video/x-raw,format=RGB ! "
-        "appsink name=sink max-buffers=1 drop=true sync=false")
-    sink = pipeline.get_by_name("sink")
-    bus = pipeline.get_bus()
-    pipeline.set_state(Gst.State.PLAYING)
+
+    def start(capped):
+        pl = Gst.parse_launch(
+            f"{src}{cap if capped else ''} ! videorate drop-only=true max-rate={fps} ! videoscale ! "
+            f"video/x-raw,width={W},height={H} ! videoconvert ! video/x-raw,format=RGB ! "
+            "appsink name=sink max-buffers=1 drop=true sync=false")
+        pl.set_state(Gst.State.PLAYING)
+        return pl, pl.get_by_name("sink"), pl.get_bus()
+
+    capped = True
+    pipeline, sink, bus = start(capped)
+    started, got_frame = time.monotonic(), False
 
     target, smooth, last = None, None, None
     prev = last_sent = time.monotonic()
     try:
         while True:
             msg = bus.pop_filtered(Gst.MessageType.ERROR | Gst.MessageType.EOS)
+            stalled = not got_frame and time.monotonic() - started > 10
+            if capped and can_uncap and (msg or stalled):
+                why = msg.parse_error()[0].message if msg and msg.type == Gst.MessageType.ERROR else "no frames"
+                print(f"Frame-rate cap not accepted ({why}); capturing uncapped", flush=True)
+                pipeline.set_state(Gst.State.NULL)
+                capped = False
+                pipeline, sink, bus = start(capped)
+                started = time.monotonic()
+                continue
             if msg:
                 err = msg.parse_error()[0].message if msg.type == Gst.MessageType.ERROR else "stream ended"
                 print(f"Capture stopped: {err}", file=sys.stderr)
@@ -244,6 +260,9 @@ def main():
             wait = SETTINGS["keepalive"] if settled else 1.0 / led_hz
             sample = sink.emit("try-pull-sample", int(Gst.SECOND * wait))
             if sample is not None:
+                if not got_frame:
+                    got_frame = True
+                    print(f"Capturing{f' at up to {fps} fps' if capped else ' (uncapped)'}", flush=True)
                 buf = sample.get_buffer()
                 ok, info = buf.map(Gst.MapFlags.READ)
                 if ok:

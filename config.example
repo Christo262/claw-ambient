@@ -17,7 +17,8 @@
 # LED colour curve. Higher = deeper, richer darks.
 #gamma = 1.8
 
-# Screen samples per second, and LED update steps per second.
+# Screen samples per second (the desktop and Game Mode are also asked to send no more
+# frames than this, which saves CPU), and LED update steps per second.
 #fps = 30
 #led_hz = 60
 

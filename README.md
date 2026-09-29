@@ -53,7 +53,7 @@ systemctl --user restart claw-ambient
 | `max_level`    | `1.0`   | Overall brightness cap (0–1).                                       |
 | `min_level`    | `0.08`  | Dimmest the rings get on dark scenes (0–1). `0` allows fully dark.  |
 | `gamma`        | `1.8`   | LED colour curve. Higher = deeper darks.                            |
-| `fps`          | `30`    | Screen samples per second.                                          |
+| `fps`          | `30`    | Screen samples per second; also caps the capture frame rate.        |
 | `led_hz`       | `60`    | LED fade steps per second.                                          |
 | `keepalive`    | `1.0`   | Resend the colour this often (s) on a static screen.                |
 
