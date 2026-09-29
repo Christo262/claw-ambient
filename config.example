@@ -1,0 +1,26 @@
+# claw-ambient settings. Copy to ~/.config/claw-ambient/config, then:
+#   systemctl --user restart claw-ambient
+# Every line is optional; remove the leading "#" to change a value.
+
+# How long colour changes take to settle, in seconds. Higher = smoother but slower.
+#fade_seconds = 0.10
+
+# How much to boost colour saturation. 1.0 = true colours, higher = punchier.
+#saturation = 1.6
+
+# Overall brightness cap, 0.0-1.0.
+#max_level = 1.0
+
+# Dimmest the rings get on dark scenes, 0.0-1.0. Set to 0 to let them go fully dark.
+#min_level = 0.08
+
+# LED colour curve. Higher = deeper, richer darks.
+#gamma = 1.8
+
+# Screen samples per second, and LED update steps per second.
+#fps = 30
+#led_hz = 60
+
+# Resend the current colour this often (seconds) on a static screen, in case
+# Steam or another tool changed the LEDs in the meantime.
+#keepalive = 1.0

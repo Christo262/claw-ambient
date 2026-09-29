@@ -1,0 +1,13 @@
+[Unit]
+Description=Screen-reactive ambient lighting for MSI Claw joystick RGB
+Documentation=https://github.com/Christo262/claw-ambient
+PartOf=graphical-session.target
+After=graphical-session.target pipewire.service
+
+[Service]
+ExecStart=%h/.local/bin/claw-ambient
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

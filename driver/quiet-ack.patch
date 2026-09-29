@@ -1,0 +1,17 @@
+--- a/drivers/hid/hid-msi.c
++++ b/drivers/hid/hid-msi.c
+@@ -531,8 +531,13 @@
+ 			break;
+ 		}
+ 
++		/*
++		 * Userspace may drive the MCU through hidraw (e.g. streaming live
++		 * RGB frames without SYNC_TO_ROM) and every such command is ACKed.
++		 * Those ACKs are expected, so don't flood the kernel log with them.
++		 */
+ 		if (drvdata->waiting_cmd == CLAW_COMMAND_TYPE_NONE) {
+-			dev_warn(&drvdata->hdev->dev, "Got unexpected ACK from MCU, ignoring\n");
++			dev_dbg(&drvdata->hdev->dev, "Got unexpected ACK from MCU, ignoring\n");
+ 			break;
+ 		}
+ 

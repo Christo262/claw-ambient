@@ -1,0 +1,3 @@
+# claw-ambient: let the logged-in user talk to the MSI Claw controller over hidraw,
+# so live RGB frames can be streamed without the driver's flash-saving SYNC_TO_ROM.
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="190[1-4]", TAG+="uaccess"

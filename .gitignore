@@ -1,0 +1,11 @@
+__pycache__/
+driver/*.ko
+driver/*.o
+driver/*.mod
+driver/*.mod.c
+driver/.*.cmd
+driver/.module-common.o
+driver/Module.symvers
+driver/modules.order
+driver/.tmp_versions/
+driver/hid-msi.c.orig
