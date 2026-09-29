@@ -30,5 +30,10 @@ echo "==> Reloading driver (controller disconnects for a second)"
 sudo modprobe -r hid_msi
 sudo modprobe hid_msi
 
+# The initramfs usually bundles hid-msi (via the keyboard hook) and loads it before the
+# root filesystem, so it must be rebuilt or the stock driver keeps winning at boot.
+echo "==> Rebuilding initramfs so the patched driver is used at boot"
+./rebuild-initramfs.sh
+
 echo "==> Loaded from: $(modinfo -n hid_msi)"
 echo "Done."

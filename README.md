@@ -15,8 +15,8 @@ and on the **desktop**.
 ## Requirements
 
 - An MSI Claw handheld (USB ID `0db0:1901`–`1904`). Developed on a Claw 8 AI+ (firmware 2.29).
-- A kernel with the `hid-msi` driver. CachyOS kernels include it (the handheld patch set), and it's
-  being upstreamed to mainline Linux. Check with: `ls /sys/class/leds/ | grep joystick_rings`
+- A kernel with the `hid-msi` driver: mainline Linux 7.3 or newer, or a CachyOS kernel (which
+  carries it as a patch). Check with: `ls /sys/class/leds/ | grep joystick_rings`
 - PipeWire, and on the desktop an `xdg-desktop-portal` backend with screen-cast support (KDE, GNOME, …)
 - Python 3 with `numpy` and `gobject`, plus GStreamer with the PipeWire plugin
 
@@ -82,7 +82,8 @@ cd driver
 ```
 
 It only overrides the driver for the kernel you build it on, so after a kernel update the stock
-driver comes back automatically. `driver/hid-msi.c` is taken from CachyOS's kernel patches for
+driver comes back automatically. The installer also rebuilds your initramfs, because most setups
+load `hid-msi` from it early in boot. `driver/hid-msi.c` is taken from CachyOS's kernel patches for
 7.2. Only use it if it matches your kernel's driver version.
 
 ## How it works
@@ -93,8 +94,9 @@ restore token, so you're only asked once. Frames are scaled to 96×54 and reduce
 weighted towards bright, saturated pixels so the rings pick up the scene's dominant colour rather
 than a muddy average. The colour is then eased towards that target in perceptual space.
 
-**Why not use the kernel LED interface?** The driver exposes the rings at
-`/sys/class/leds/go:rgb:joystick_rings`, but it's designed for occasional changes:
+**Why not use the kernel LED interface?** The driver exposes the rings as an LED device
+(`/sys/class/leds/msi_claw:rgb:joystick_rings`, or `go:rgb:joystick_rings` on CachyOS), but it's
+designed for occasional changes:
 
 1. Every change is followed by a `SYNC_TO_ROM` command that saves the colour to the controller's
    flash memory. Streaming colours through it would mean many flash writes per second, and flash
